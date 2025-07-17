@@ -1,409 +1,278 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نموذج الطلب - المأكولات الشامية</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+"use client";
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
-            min-height: 100vh;
-            padding: 20px;
-            direction: rtl;
-        }
+import React, { useState } from "react";
+import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ShoppingCart, Phone, MapPin, User, Hash } from "lucide-react";
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+const products = [
+  {
+    id: 1,
+    name: "يلنجي",
+    options: ["25₪", "50₪", "75₪", "100₪"],
+    type: "select",
+    image: "https://lanasnacks.com/wp-content/uploads/2025/01/%D9%88%D8%B1%D9%82-%D8%B9%D9%86%D8%A8-%D9%8A%D9%84%D9%86%D8%AC%D9%8A-450-%D8%BA%D8%B1%D8%A7%D9%85-scaled.jpeg",
+    description: "ورق عنب محشي بالأرز والخضار"
+  },
+  {
+    id: 2,
+    name: "فتة يلنجي",
+    price: "20₪",
+    image: "https://i.ytimg.com/vi/VMLP4RwcPxQ/maxresdefault.jpg",
+    description: "فتة ورق العنب التقليدية"
+  },
+  {
+    id: 3,
+    name: "كبة مقلية",
+    price: "حبة المقلية ب 4 شيكل",
+    image: "https://images.joodgourmet.com/uploads/item/photo/5f8db08e9458ac550c8984ef/Burgul_Kibbeh.jpg",
+    description: "كبة مقلية طازجة ولذيذة"
+  },
+  {
+    id: 4,
+    name: "كبة مشوية",
+    options: [
+      "حبة بدون شوي - 5 شيكل",
+      "حبة مع شوي - 7 شيكل", 
+      "كيلو بدون شوي (20 حبة) - 100 شيكل",
+      "كيلو مع شوي (20 حبة) - 130 شيكل"
+    ],
+    type: "select",
+    image: "https://img-global.cpcdn.com/recipes/454209/600x852cq80/%D8%A7%D9%84%D8%B5%D9%88%D8%B1%D8%A9-%D8%A7%D9%84%D8%B1%D8%A6%D9%8A%D8%B3%D9%8A%D8%A9-%D9%84%D9%88%D8%B5%D9%81%D8%A9%D8%B7%D8%B1%D9%8A%D9%82%D8%A9-%D8%B9%D9%85%D9%84-%D9%83%D8%A8%D8%A9-%D9%85%D8%B4%D9%88%D9%8A%D8%A9.webp",
+    description: "كبة مشوية على الفحم"
+  },
+];
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+export default function OrderPage() {
+  const [order, setOrder] = useState({});
+  const [orderNumber, setOrderNumber] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [deliveryArea, setDeliveryArea] = useState("");
 
-        .header-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #059669, #10b981);
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.3);
-        }
+  const handleChange = (productId: number, value: string) => {
+    setOrder((prev) => ({ ...prev, [productId]: value }));
+  };
 
-        .header h1 {
-            font-size: 3rem;
-            color: #1f2937;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
+  const handleSubmit = () => {
+    if (!orderNumber || !customerName || !deliveryArea) {
+      alert("يرجى تعبئة جميع الحقول.");
+      return;
+    }
 
-        .header p {
-            font-size: 1.2rem;
-            color: #6b7280;
-        }
+    const deliveryCost =
+      deliveryArea === "المخيم او عناتا" ? "10 شيكل" : "25 شيكل";
 
-        .form-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
+    const orderText = Object.entries(order)
+      .filter(([_, value]) => value && value !== "")
+      .map(([id, value]) => {
+        const product = products.find((p) => p.id.toString() === id);
+        return `${product?.name}: ${value}`;
+      })
+      .join("\n");
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
+    if (!orderText) {
+      alert("يرجى اختيار منتج واحد على الأقل.");
+      return;
+    }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
+    const message = `طلب مسبق فقط \n🛒 طلب جديد من المتجر:\n\n📞 رقم التواصل: ${orderNumber}\n👤 الاسم: ${customerName}\n📍 منطقة التوصيل: ${deliveryArea}\n🚚 تكلفة التوصيل: ${deliveryCost}\n\n📦 المنتجات:\n${orderText}`;
+    const phone = "0587515900";
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/972${phone.slice(1)}?text=${encodedMessage}`;
 
-        .form-group label {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    window.open(whatsappUrl, "_blank");
+  };
 
-        .form-group input,
-        .form-group select {
-            padding: 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            background: white;
-        }
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("https://images.pexels.com/photos/4198019/pexels-photo-4198019.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/85 via-green-50/90 to-emerald-50/85" />
+      </div>
 
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #059669;
-            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-        }
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .product-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-        }
-
-        .product-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .product-content {
-            padding: 30px;
-        }
-
-        .product-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 10px;
-        }
-
-        .product-description {
-            color: #6b7280;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-
-        .product-price {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #059669;
-            margin-bottom: 20px;
-        }
-
-        .quantity-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            text-align: center;
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: white;
-            border: none;
-            padding: 20px 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.3);
-            display: block;
-            margin: 0 auto;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(5, 150, 105, 0.4);
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #6b7280;
-        }
-
-        .icon {
-            width: 20px;
-            height: 20px;
-            fill: #059669;
-        }
-
-        @media (max-width: 768px) {
-            .products-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .form-card {
-                padding: 20px;
-            }
-            
-            .product-content {
-                padding: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-icon">
-                <svg class="icon" style="width: 40px; height: 40px; fill: white;" viewBox="0 0 24 24">
-                    <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
-                </svg>
+      <div className="relative z-10 p-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full mb-4 shadow-lg">
+              <ShoppingCart className="w-8 h-8 text-white" />
             </div>
-            <h1>نموذج الطلب</h1>
-            <p>اطلب أشهى المأكولات الشامية</p>
-        </div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">نموذج الطلب</h1>
+            <p className="text-gray-600 text-lg">اطلب أشهى المأكولات الشامية</p>
+          </div>
 
-        <!-- Customer Info Form -->
-        <div class="form-card">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="phone">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path d="M6.62 10.79C8.06 13.62 10.38 15.94 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z"/>
-                        </svg>
-                        رقم التواصل
-                    </label>
-                    <input type="tel" id="phone" placeholder="أدخل رقم التواصل هنا" required>
+          {/* Order Form */}
+          <Card className="mb-8 shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="orderNumber" className="flex items-center gap-2 text-lg font-semibold text-gray-700">
+                    <Hash className="w-5 h-5 text-green-600" />
+                    رقم التواصل
+                  </Label>
+                  <Input
+                    id="orderNumber"
+                    placeholder="أدخل رقم التواصل هنا"
+                    value={orderNumber}
+                    onChange={(e) => setOrderNumber(e.target.value)}
+                    className="h-12 text-lg border-2 border-gray-200 focus:border-green-500 transition-colors"
+                  />
                 </div>
 
-                <div class="form-group">
-                    <label for="name">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
-                        </svg>
-                        اسم الزبون
-                    </label>
-                    <input type="text" id="name" placeholder="أدخل الاسم الكامل" required>
+                <div className="space-y-2">
+                  <Label htmlFor="customerName" className="flex items-center gap-2 text-lg font-semibold text-gray-700">
+                    <User className="w-5 h-5 text-green-600" />
+                    اسم الزبون
+                  </Label>
+                  <Input
+                    id="customerName"
+                    placeholder="أدخل الاسم الكامل"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="h-12 text-lg border-2 border-gray-200 focus:border-green-500 transition-colors"
+                  />
                 </div>
 
-                <div class="form-group">
-                    <label for="area">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z"/>
-                        </svg>
-                        منطقة التوصيل
-                    </label>
-                    <select id="area" required>
-                        <option value="">اختر المنطقة</option>
-                        <option value="المخيم او عناتا">المخيم او عناتا - 10 شيكل</option>
-                        <option value="ضواحي القدس">ضواحي القدس - 25 شيكل</option>
-                    </select>
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryArea" className="flex items-center gap-2 text-lg font-semibold text-gray-700">
+                    <MapPin className="w-5 h-5 text-green-600" />
+                    منطقة التوصيل
+                  </Label>
+                  <Select value={deliveryArea} onValueChange={setDeliveryArea}>
+                    <SelectTrigger className="h-12 text-lg border-2 border-gray-200 focus:border-green-500">
+                      <SelectValue placeholder="اختر المنطقة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="المخيم او عناتا">المخيم او عناتا - 10 شيكل</SelectItem>
+                      <SelectItem value="الطور">الطور - 25 شيكل</SelectItem>
+                      <SelectItem value="سلوان">سلوان - 25 شيكل</SelectItem>
+                      <SelectItem value="بيت حنينا">بيت حنينا - 25 شيكل</SelectItem>
+                      <SelectItem value="شعفاط">شعفاط - 25 شيكل</SelectItem>
+                      <SelectItem value="راس العمود">راس العمود - 25 شيكل</SelectItem>
+                      <SelectItem value="وادي الجوز">وادي الجوز - 25 شيكل</SelectItem>
+                      <SelectItem value="حزما">حزما - 25 شيكل</SelectItem>
+                      <SelectItem value="الزعيم">الزعيم - 25 شيكل</SelectItem>
+                      <SelectItem value="العيزرية">العيزرية - 25 شيكل</SelectItem>
+                      <SelectItem value="صور باهر">صور باهر - 25 شيكل</SelectItem>
+                      <SelectItem value="جبل المكبر">جبل المكبر - 25 شيكل</SelectItem>
+                      <SelectItem value="كفر عقب">كفر عقب - 25 شيكل</SelectItem>
+                      <SelectItem value="العيساوية">العيساوية - 25 شيكل</SelectItem>
+                      <SelectItem value="الرام">الرام - 25 شيكل</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-            </div>
-        </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <!-- Products -->
-        <div class="products-grid">
-            <!-- يلنجي -->
-            <div class="product-card">
-                <img src="https://lanasnacks.com/wp-content/uploads/2025/01/%D9%88%D8%B1%D9%82-%D8%B9%D9%86%D8%A8-%D9%8A%D9%84%D9%86%D8%AC%D9%8A-450-%D8%BA%D8%B1%D8%A7%D9%85-scaled.jpeg" alt="يلنجي" class="product-image">
-                <div class="product-content">
-                    <h3 class="product-title">يلنجي</h3>
-                    <p class="product-description">ورق عنب محشي بالأرز والخضار</p>
-                    <div class="form-group">
-                        <label for="yalanji">اختر الكمية:</label>
-                        <select id="yalanji">
-                            <option value="">اختر الكمية</option>
-                            <option value="25₪">25₪</option>
-                            <option value="50₪">50₪</option>
-                            <option value="75₪">75₪</option>
-                            <option value="100₪">100₪</option>
-                        </select>
+          {/* Products Grid */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {products.map((product) => (
+              <Card key={product.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-white/95 backdrop-blur-sm group">
+                <CardContent className="p-0">
+                  {product.image && (
+                    <div className="relative overflow-hidden">
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        width={600}
+                        height={300}
+                        className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
-                </div>
-            </div>
-
-            <!-- فتة يلنجي -->
-            <div class="product-card">
-                <img src="https://i.ytimg.com/vi/VMLP4RwcPxQ/maxresdefault.jpg" alt="فتة يلنجي" class="product-image">
-                <div class="product-content">
-                    <h3 class="product-title">فتة يلنجي</h3>
-                    <p class="product-description">فتة ورق العنب التقليدية</p>
-                    <div class="product-price">20₪</div>
-                    <div class="form-group">
-                        <label for="fatteh">الكمية:</label>
-                        <input type="number" id="fatteh" class="quantity-input" min="0" placeholder="0">
+                  )}
+                  
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2">{product.name}</h2>
+                      {product.description && (
+                        <p className="text-gray-600 text-sm">{product.description}</p>
+                      )}
                     </div>
-                </div>
-            </div>
 
-            <!-- كبة مقلية -->
-            <div class="product-card">
-                <img src="https://images.joodgourmet.com/uploads/item/photo/5f8db08e9458ac550c8984ef/Burgul_Kibbeh.jpg" alt="كبة مقلية" class="product-image">
-                <div class="product-content">
-                    <h3 class="product-title">كبة مقلية</h3>
-                    <p class="product-description">كبة مقلية طازجة ولذيذة</p>
-                    <div class="product-price">كيلو، 35 حبة، 100 شيكل</div>
-                    <div class="form-group">
-                        <label for="kibbeh-fried">الكمية:</label>
-                        <input type="number" id="kibbeh-fried" class="quantity-input" min="0" placeholder="0">
-                    </div>
-                </div>
-            </div>
+                    {product.type === "select" ? (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">اختر الكمية:</Label>
+                        <Select onValueChange={(value) => handleChange(product.id, value)}>
+                          <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-green-500">
+                            <SelectValue placeholder="اختر الكمية" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {product.options.map((option, idx) => (
+                              <SelectItem key={idx} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={`qty-${product.id}`} className="text-sm font-semibold text-gray-700">
+                            الكمية:
+                          </Label>
+                          <span className="text-lg font-bold text-green-600">{product.price}</span>
+                        </div>
+                        <Input
+                          id={`qty-${product.id}`}
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          onChange={(e) => {
+                            const qty = e.target.value;
+                            if (qty && qty !== "0") {
+                              if (product.id === 3) {
+                                // كبة مقلية - 4 شيكل per piece
+                                const total = parseInt(qty) * 4;
+                                handleChange(product.id, `${qty} حبة x 4 شيكل = ${total} شيكل`);
+                              } else {
+                                handleChange(product.id, `${qty} x ${product.price}`);
+                              }
+                            } else {
+                              handleChange(product.id, "");
+                            }
+                          }}
+                          className="h-12 text-lg border-2 border-gray-200 focus:border-green-500 transition-colors"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-            <!-- كبة مشوية -->
-            <div class="product-card">
-                <img src="https://img-global.cpcdn.com/recipes/454209/600x852cq80/%D8%A7%D9%84%D8%B5%D9%88%D8%B1%D8%A9-%D8%A7%D9%84%D8%B1%D8%A6%D9%8A%D8%B3%D9%8A%D8%A9-%D9%84%D9%88%D8%B5%D9%81%D8%A9%D8%B7%D8%B1%D9%8A%D9%82%D8%A9-%D8%B9%D9%85%D9%84-%D9%83%D8%A8%D8%A9-%D9%85%D8%B4%D9%88%D9%8A%D8%A9.webp" alt="كبة مشوية" class="product-image">
-                <div class="product-content">
-                    <h3 class="product-title">كبة مشوية</h3>
-                    <p class="product-description">كبة مشوية على الفحم</p>
-                    <div class="product-price">كيلو، 20 حبة، 100 شيكل</div>
-                    <div class="form-group">
-                        <label for="kibbeh-grilled">الكمية:</label>
-                        <input type="number" id="kibbeh-grilled" class="quantity-input" min="0" placeholder="0">
-                    </div>
-                </div>
-            </div>
+          {/* Submit Button */}
+          <div className="text-center">
+            <Button 
+              onClick={handleSubmit}
+              size="lg"
+              className="h-14 px-12 text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <Phone className="w-5 h-5 mr-2" />
+              إرسال الطلب عبر واتساب
+            </Button>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-8 text-gray-600">
+            <p className="text-sm">طلب مسبق فقط • للاستفسار: 0587515900</p>
+          </div>
         </div>
-
-        <!-- Submit Button -->
-        <button class="submit-btn" onclick="submitOrder()">
-            📱 إرسال الطلب عبر واتساب
-        </button>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>طلب مسبق فقط • للاستفسار: 0587515900</p>
-        </div>
+      </div>
     </div>
-
-    <script>
-        function submitOrder() {
-            // Get customer info
-            const phone = document.getElementById('phone').value;
-            const name = document.getElementById('name').value;
-            const area = document.getElementById('area').value;
-
-            // Validate required fields
-            if (!phone || !name || !area) {
-                alert('يرجى تعبئة جميع الحقول.');
-                return;
-            }
-
-            // Get delivery cost
-            const deliveryCost = area === "المخيم او عناتا" ? "10 شيكل" : "25 شيكل";
-
-            // Get order items
-            const orderItems = [];
-            
-            // يلنجي
-            const yalanji = document.getElementById('yalanji').value;
-            if (yalanji) {
-                orderItems.push(`يلنجي: ${yalanji}`);
-            }
-
-            // فتة يلنجي
-            const fatteh = document.getElementById('fatteh').value;
-            if (fatteh && fatteh > 0) {
-                orderItems.push(`فتة يلنجي: ${fatteh} x 20₪`);
-            }
-
-            // كبة مقلية
-            const kibbehFried = document.getElementById('kibbeh-fried').value;
-            if (kibbehFried && kibbehFried > 0) {
-                orderItems.push(`كبة مقلية: ${kibbehFried} x كيلو، 35 حبة، 100 شيكل`);
-            }
-
-            // كبة مشوية
-            const kibbehGrilled = document.getElementById('kibbeh-grilled').value;
-            if (kibbehGrilled && kibbehGrilled > 0) {
-                orderItems.push(`كبة مشوية: ${kibbehGrilled} x كيلو، 20 حبة، 100 شيكل`);
-            }
-
-            // Check if any items selected
-            if (orderItems.length === 0) {
-                alert('يرجى اختيار منتج واحد على الأقل.');
-                return;
-            }
-
-            // Create WhatsApp message
-            const message = `طلب مسبق فقط \n🛒 طلب جديد من المتجر:\n\n📞 رقم التواصل: ${phone}\n👤 الاسم: ${name}\n📍 منطقة التوصيل: ${area}\n🚚 تكلفة التوصيل: ${deliveryCost}\n\n📦 المنتجات:\n${orderItems.join('\n')}`;
-            
-            // WhatsApp number
-            const whatsappNumber = "0587515900";
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappUrl = `https://wa.me/972${whatsappNumber.slice(1)}?text=${encodedMessage}`;
-
-            // Open WhatsApp
-            window.open(whatsappUrl, '_blank');
-        }
-    </script>
-</body>
-</html>
+  );
+}
